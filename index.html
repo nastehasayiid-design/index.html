@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumen Video Background</title>
+  <style>
+    :root {
+      --bg: #070604;
+      --bg-soft: #110d08;
+      --gold: #c8952a;
+      --gold-2: #e8b84b;
+      --gold-3: #f6d889;
+      --cream: #f8f1e3;
+      --white: #fffdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    body {
+      position: relative;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 18% 18%, rgba(200, 149, 42, 0.18), transparent 30%),
+        radial-gradient(circle at 82% 24%, rgba(200, 149, 42, 0.10), transparent 24%),
+        radial-gradient(circle at 50% 74%, rgba(200, 149, 42, 0.08), transparent 34%),
+        linear-gradient(180deg, #0b0805 0%, var(--bg) 46%, #0d0905 100%);
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .grid,
+    .noise,
+    .vignette,
+    .scanlines,
+    .halo,
+    .flare {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .grid {
+      background-image:
+        linear-gradient(rgba(232, 184, 75, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232, 184, 75, 0.07) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: radial-gradient(circle at center, black 34%, transparent 100%);
+      opacity: 0.55;
+      animation: driftGrid 18s linear infinite;
+    }
+
+    .noise {
+      opacity: 0.06;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.8) 0 0.6px, transparent 0.8px),
+        radial-gradient(circle at 75% 60%, rgba(255, 255, 255, 0.5) 0 0.5px, transparent 0.7px),
+        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.6) 0 0.5px, transparent 0.7px);
+      background-size: 160px 160px, 220px 220px, 190px 190px;
+      animation: pulseNoise 7s ease-in-out infinite alternate;
+    }
+
+    .scanlines {
+      background:
+        linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.015) 0,
+          rgba(255, 255, 255, 0.015) 1px,
+          transparent 2px,
+          transparent 6px
+        );
+      opacity: 0.18;
+      mix-blend-mode: screen;
+    }
+
+    .halo {
+      background:
+        radial-gradient(circle at center, rgba(246, 216, 137, 0.13), transparent 30%),
+        radial-gradient(circle at center, rgba(200, 149, 42, 0.09), transparent 48%);
+      filter: blur(12px);
+      animation: breathe 8s ease-in-out infinite;
+    }
+
+    .flare {
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 12%),
+        conic-gradient(
+          from 180deg at 50% 50%,
+          transparent 0deg,
+          rgba(232, 184, 75, 0.1) 42deg,
+          transparent 76deg,
+          transparent 220deg,
+          rgba(232, 184, 75, 0.07) 270deg,
+          transparent 320deg
+        );
+      mix-blend-mode: screen;
+      opacity: 0.6;
+      animation: rotateSlow 24s linear infinite;
+    }
+
+    .vignette {
+      background:
+        radial-gradient(circle at center, transparent 38%, rgba(0, 0, 0, 0.18) 68%, rgba(0, 0, 0, 0.56) 100%);
+    }
+
+    .frame {
+      position: absolute;
+      inset: 28px;
+      border: 1px solid rgba(232, 184, 75, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      pointer-events: none;
+    }
+
+    .frame::before,
+    .frame::after {
+      content: "";
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-color: rgba(232, 184, 75, 0.34);
+      border-style: solid;
+    }
+
+    .frame::before {
+      top: -1px;
+      left: -1px;
+      border-width: 1px 0 0 1px;
+    }
+
+    .frame::after {
+      right: -1px;
+      bottom: -1px;
+      border-width: 0 1px 1px 0;
+    }
+
+    .brand {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      font: 700 11px/1.2 Arial, Helvetica, sans-serif;
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: rgba(246, 216, 137, 0.7);
+      animation: fadeFloat 4.5s ease-in-out infinite;
+    }
+
+    .wordmark {
+      margin: 0;
+      font-size: clamp(72px, 10vw, 164px);
+      font-weight: 700;
+      line-height: 0.9;
+      letter-spacing: -0.06em;
+      color: rgba(255, 253, 248, 0.95);
+      text-shadow:
+        0 0 28px rgba(200, 149, 42, 0.12),
+        0 0 80px rgba(200, 149, 42, 0.06);
+    }
+
+    .wordmark .gold {
+      color: var(--gold-2);
+      font-style: italic;
+    }
+
+    .wordmark .outline {
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(255, 255, 255, 0.25);
+    }
+
+    .tagline {
+      margin: 18px 0 0;
+      font: 400 clamp(14px, 1.6vw, 22px)/1.5 Arial, Helvetica, sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 253, 248, 0.44);
+    }
+
+    .tagline strong {
+      color: rgba(246, 216, 137, 0.9);
+      font-weight: 700;
+    }
+
+    .orbit {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      border: 1px solid rgba(232, 184, 75, 0.12);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .orbit.one {
+      width: min(62vw, 720px);
+      aspect-ratio: 1;
+      animation: rotateSlow 26s linear infinite;
+    }
+
+    .orbit.two {
+      width: min(82vw, 980px);
+      aspect-ratio: 1;
+      animation: rotateSlowReverse 34s linear infinite;
+    }
+
+    .orbit::before,
+    .orbit::after {
+      content: "";
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(246, 216, 137, 1) 0%, rgba(200, 149, 42, 0.2) 72%, transparent 100%);
+      box-shadow: 0 0 22px rgba(232, 184, 75, 0.38);
+    }
+
+    .orbit.one::before {
+      left: 16%;
+      top: -5px;
+    }
+
+    .orbit.one::after {
+      right: 14%;
+      bottom: 8%;
+    }
+
+    .orbit.two::before {
+      left: 12%;
+      bottom: 12%;
+    }
+
+    .orbit.two::after {
+      right: 18%;
+      top: 9%;
+    }
+
+    .hud {
+      position: absolute;
+      left: 40px;
+      right: 40px;
+      bottom: 34px;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      font: 600 11px/1.4 Arial, Helvetica, sans-serif;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: rgba(255, 253, 248, 0.3);
+      pointer-events: none;
+    }
+
+    .hud strong {
+      display: block;
+      color: rgba(246, 216, 137, 0.72);
+      margin-top: 8px;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+    }
+
+    @keyframes driftGrid {
+      from { transform: translate3d(0, 0, 0); }
+      50% { transform: translate3d(10px, 14px, 0); }
+      to { transform: translate3d(0, 0, 0); }
+    }
+
+    @keyframes pulseNoise {
+      from { opacity: 0.04; }
+      to { opacity: 0.08; }
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50% { transform: scale(1.06); opacity: 1; }
+    }
+
+    @keyframes rotateSlow {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes rotateSlowReverse {
+      from { transform: translate(-50%, -50%) rotate(360deg); }
+      to { transform: translate(-50%, -50%) rotate(0deg); }
+    }
+
+    @keyframes fadeFloat {
+      0%, 100% { opacity: 0.72; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-3px); }
+    }
+
+    @media (max-width: 700px) {
+      .frame {
+        inset: 18px;
+      }
+
+      .hud {
+        left: 22px;
+        right: 22px;
+        bottom: 22px;
+        font-size: 9px;
+        letter-spacing: 0.18em;
+      }
+
+      .tagline {
+        max-width: 80vw;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="grid"></div>
+  <div class="noise"></div>
+  <div class="scanlines"></div>
+  <div class="halo"></div>
+  <div class="flare"></div>
+  <div class="orbit one"></div>
+  <div class="orbit two"></div>
+  <div class="frame"></div>
+
+  <div class="brand">
+    <p class="eyebrow">Human Intelligence For Startups</p>
+    <h1 class="wordmark"><span class="gold">Lum</span><span class="outline">en</span></h1>
+    <p class="tagline">Where <strong>people</strong> become the advantage</p>
+  </div>
+
+  <div class="hud">
+    <div>
+      Intro sequence
+      <strong>Human-first hiring</strong>
+    </div>
+    <div style="text-align:right;">
+      Lumen visual system
+      <strong>Signal / Trust / Fit</strong>
+    </div>
+  </div>
+
+  <div class="vignette"></div>
+
+  <script>
+    const canvas = document.getElementById("particles");
+    const ctx = canvas.getContext("2d");
+
+    let width = 0;
+    let height = 0;
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let particles = [];
+    let lastTime = 0;
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      buildParticles();
+    }
+
+    function buildParticles() {
+      const count = Math.max(55, Math.floor((width * height) / 26000));
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        r: Math.random() * 1.9 + 0.5,
+        a: Math.random() * Math.PI * 2,
+        s: Math.random() * 0.3 + 0.05,
+        v: Math.random() * 0.26 + 0.06,
+        o: Math.random() * 0.45 + 0.18
+      }));
+    }
+
+    function drawConnection(ax, ay, bx, by, dist) {
+      const alpha = Math.max(0, 0.18 - dist / 900);
+      if (alpha <= 0) return;
+      ctx.strokeStyle = "rgba(232, 184, 75," + alpha.toFixed(3) + ")";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+    }
+
+    function render(time) {
+      const delta = Math.min(32, time - lastTime || 16);
+      lastTime = time;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const centerX = width * 0.5;
+      const centerY = height * 0.5;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.a += p.s * delta * 0.01;
+        p.y -= p.v * delta * 0.06;
+        p.x += Math.sin(p.a) * 0.18;
+
+        if (p.y < -20) {
+          p.y = height + 20;
+          p.x = Math.random() * width;
+        }
+
+        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 7);
+        glow.addColorStop(0, "rgba(246, 216, 137," + p.o + ")");
+        glow.addColorStop(0.35, "rgba(200, 149, 42," + (p.o * 0.45) + ")");
+        glow.addColorStop(1, "rgba(200, 149, 42,0)");
+
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(255, 248, 230," + Math.min(0.95, p.o + 0.2) + ")";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        const dx = p.x - centerX;
+        const dy = p.y - centerY;
+        const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+
+        if (distFromCenter < Math.min(width, height) * 0.33) {
+          ctx.strokeStyle = "rgba(232, 184, 75, 0.08)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(centerX + dx * 0.25, centerY + dy * 0.25);
+          ctx.stroke();
+        }
+      }
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 110) {
+            drawConnection(particles[i].x, particles[i].y, particles[j].x, particles[j].y, dist);
+          }
+        }
+      }
+
+      const sweepY = (time * 0.05) % (height + 140) - 70;
+      const sweep = ctx.createLinearGradient(0, sweepY - 20, 0, sweepY + 40);
+      sweep.addColorStop(0, "rgba(255,255,255,0)");
+      sweep.addColorStop(0.5, "rgba(232,184,75,0.08)");
+      sweep.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = sweep;
+      ctx.fillRect(0, sweepY - 40, width, 80);
+
+      requestAnimationFrame(render);
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
